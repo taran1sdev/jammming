@@ -10,6 +10,7 @@ import(
 	"log"
 	"io"
 	"os"
+	"errors"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +20,7 @@ const (
 
 	authEndpoint = "https://accounts.spotify.com/authorize"
 	accessTokenEndpoint = "https://accounts.spotify.com/api/token"
+	userEndpoint = "https://api.spotify.com/v1/me"
 
 	redirectUri = "http://localhost:5000/auth/callback"
 )
@@ -32,8 +34,14 @@ type access struct {
 	Scope	     string `json:"scope"`
 }
 
+type user struct {
+	Name	string `json:"display_name"`
+	ID	string `json:"id"` 
+}
+
 var (
 	Access access
+	User user
 
 	clientId string = os.Getenv("CLIENT_ID") 
 	clientSecret string = os.Getenv("CLIENT_SECRET")
@@ -67,6 +75,26 @@ func getUrlFormData(code string) url.Values {
 	return data
 }
 
+func getUserInfo() error {
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodGet, userEndpoint, nil)
+	req.Header.Add("Authorization", "Bearer " + Access.Token)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		json.Unmarshal(body, &User)
+		return nil
+	} else {
+		return errors.New("Bad response when requesting user data: " + http.StatusText(resp.StatusCode))
+
+	}
+}
+
 // Handles the callback containing auth code and makes request to /api/token and stores response in the Access variable
 func HandleAuthCallback(c *gin.Context) {
 	authCode := c.Query("code")
@@ -93,6 +121,10 @@ func HandleAuthCallback(c *gin.Context) {
 	if resp.StatusCode == http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		json.Unmarshal(body, &Access)
+		if err = getUserInfo(); err != nil {
+			log.Fatal("Error getting user info")
+		}
+		fmt.Println(User)
 		c.Redirect(http.StatusFound, frontend)
 	} else {
 		log.Fatalf("Request returned Status %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
