@@ -3,34 +3,71 @@ package auth
 import(
 	"fmt"
 	"strings"
-	
+	"net/http"
+	"net/url"
+	"encoding/base64"
+	"encoding/json"
+	"log"
+	"io"
+	"os"
+
 	"github.com/gin-gonic/gin"
 )
 
 const (
-	clientId = "985aa6f5dba84edc8e92f5fda306d18e"
-	clientSecret = "3d5ae77c544e48ba97a82e9201c50fc4"
+	frontend = "http://localhost:3000/"
 
 	authEndpoint = "https://accounts.spotify.com/authorize"
 	accessTokenEndpoint = "https://accounts.spotify.com/api/token"
 
-	redirectUri = "http://localhost:3000/auth/callback"
+	redirectUri = "http://localhost:5000/auth/callback"
 )
 
-scopes := []string{}{
-	"streaming",
-	"user-read-private",
-	"user-read-email"
+// datatype for the response from the access /api/token endpoint
+type access struct {
+	Token        string `json:"access_token"`
+	Type  	     string `json:"token_type"`
+	Expires      int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+	Scope	     string `json:"scope"`
 }
 
-const loginURL := fmt.Sprintf("%v?client_id=%v&redirect_uri=%v&scope=%v&response_type=code&show_dialog=true"authEndpoint, clientId, redirectUri, strings.Join(scopes[:], "%20")) 
+var (
+	Access access
 
+	clientId string = os.Getenv("CLIENT_ID") 
+	clientSecret string = os.Getenv("CLIENT_SECRET")
+)
+
+// Handles the redirect to spotify account login
 func RedirectToAuthURL(c *gin.Context) {
-	authURL := fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code&show_dialog=true"authEndpoint, clientId, redirectUri, strings.Join(scopes[:], "%20"))
+	scopes := []string{
+	"streaming",
+	"user-read-private",
+	"user-read-email",
+	"playlist-modify-public",
+	"user-read-private",
+}
+
+
+	authURL := fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code&show_dialog=true", authEndpoint, clientId, redirectUri, strings.Join(scopes[:], "%20"))
 
 	c.Redirect(http.StatusFound, authURL)
 }
 
+// Function to return url form data for the /api/token request
+func getUrlFormData(code string) url.Values {
+	data := url.Values{}
+	data.Add("grant_type", "authorization_code")
+	data.Add("code", code)
+	data.Add("redirect_uri", redirectUri)
+	data.Add("client_id", clientId)
+	data.Add("client_secret", clientSecret)
+
+	return data
+}
+
+// Handles the callback containing auth code and makes request to /api/token and stores response in the Access variable
 func HandleAuthCallback(c *gin.Context) {
 	authCode := c.Query("code")
 	if authCode == "" {
@@ -38,5 +75,27 @@ func HandleAuthCallback(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"auth": authCode}
+
+	data := getUrlFormData(authCode)
+	
+	authHeaderString := clientId + ":" + clientSecret
+
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodPost, accessTokenEndpoint, strings.NewReader(data.Encode()))
+	req.Header.Add("Authorization", "Basic " + base64.StdEncoding.EncodeToString([]byte(authHeaderString)))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		json.Unmarshal(body, &Access)
+		c.Redirect(http.StatusFound, frontend)
+	} else {
+		log.Fatalf("Request returned Status %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
+
 }

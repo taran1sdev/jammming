@@ -5,17 +5,14 @@ import (
 	
 	"jammming/auth"
 	
-	"net/http"
-	"encoding/json"
-	"os"
-	"log"
-	"strconv"
 )
 
 func main() {
 	router := gin.Default()
 
-	router.POST("/login")
-	router.GET("/auth")
+	router.GET("auth/login", auth.RedirectToAuthURL)
+	router.GET("/auth/callback", auth.HandleAuthCallback)
+
+	router.Run("localhost:5000")
 }
 
