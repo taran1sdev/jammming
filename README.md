@@ -1,8 +1,8 @@
 # Jammming
 
-Codecademy Front End project using React
+Codecademy Front End Engineer Path project using ReactJS.
 
-I created a backend with Go.
+I created a backend API with Go to handle requests to the Spotify API instead of doing everything on the frontend.
 
 Application Features:
 - Authenticate with spotify api
