@@ -1,23 +1,32 @@
-import logo from './logo.svg';
 import './App.css';
 
+import React, {useState, useEffect} from 'react';
+
+import getAuthenticated from './apiCalls/getAuthenticated';
+
+import SearchContainer from './containers/SearchContainer'
+import PlaylistContainer from './containers/PlaylistContainer'
+
 function App() {
-  return (
+    const [selectedSongs, setSelectedSongs] = useState([]);
+    const [authenticated, setAuthenticated] = useState(false);
+
+	useEffect(() => {
+		getAuthenticated().then((result) => {
+			setAuthenticated(result);
+		})
+	}) 
+	return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+        <h1>Jamming: Spotify Playlist Builder</h1>
+    	<SearchContainer
+		selectedSongs={selectedSongs}
+		setSelectedSongs={setSelectedSongs} 
+		authenticated={authenticated}/>
+
+	<PlaylistContainer
+		selectedSongs={selectedSongs}
+		setSelectedSongs={setSelectedSongs} />
     </div>
   );
 }

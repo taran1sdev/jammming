@@ -5,13 +5,13 @@ import (
 
 	"jammming/auth"
 
-	"net/http"
 	"bytes"
-	"strings"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net/http"
 	"net/url"
+	"strings"
 )
 
 const (
@@ -26,7 +26,7 @@ type searchResponse struct {
 			ID      string `json:"id"`
 			URI     string `json:"uri"`
 			Name    string `json:"name"`
-			Artists []struct { 
+			Artists []struct {
 				Name string `json"name"`
 			}
 			Album struct {
@@ -39,11 +39,11 @@ type searchResponse struct {
 }
 
 type track struct {
-	ID 	string `json"id"`
-	URI	string `json"uri"`
-	Name	string `json"name"`
-	Artist  string `json"artist"`
-	Image	string `json"image"`
+	ID     string `json"id"`
+	URI    string `json"uri"`
+	Name   string `json"name"`
+	Artist string `json"artist"`
+	Image  string `json"image"`
 }
 
 type tracks struct {
@@ -51,35 +51,35 @@ type tracks struct {
 }
 
 func SearchSpotify(c *gin.Context) {
-	if auth.Access.Token == ""{
-		c.IndentedJSON(http.StatusOK, gin.H{"error": "No access token"})
+	if auth.Access.Token == "" {
+		c.JSON(http.StatusOK, gin.H{"error": "No access token"})
 		return
 	}
-	
+
 	endpoint := fmt.Sprintf("%ssearch?q=%s&type=track&limit=15", baseURL, url.QueryEscape(c.Query("searchTerm")))
 
 	client := &http.Client{}
 
 	req, _ := http.NewRequest(http.MethodGet, endpoint, nil)
-	req.Header.Add("Authorization", "Bearer " + auth.Access.Token)
+	req.Header.Add("Authorization", "Bearer "+auth.Access.Token)
 
 	resp, _ := client.Do(req)
 
 	if resp.StatusCode != http.StatusOK {
-		c.IndentedJSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Spotify API returned status code: %d", resp.StatusCode)})
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Spotify API returned status code: %d", resp.StatusCode)})
 		return
 	}
 
-	var respJSON searchResponse 
-	
-	body, _ := io.ReadAll(resp.Body) 
+	var respJSON searchResponse
+
+	body, _ := io.ReadAll(resp.Body)
 	json.Unmarshal(body, &respJSON)
-	
+
 	var results tracks
 
 	for _, respTrack := range respJSON.Tracks.Items {
 		var t track
-		
+
 		t.ID = respTrack.ID
 		t.URI = respTrack.URI
 		t.Name = respTrack.Name
@@ -97,7 +97,7 @@ func SearchSpotify(c *gin.Context) {
 
 		results.Tracks = append(results.Tracks, t)
 	}
-	c.IndentedJSON(http.StatusOK, results)
+	c.JSON(http.StatusOK, results)
 }
 
 // Create Playlist
@@ -110,35 +110,35 @@ type playlistInfo struct {
 var playlist playlistInfo
 
 func CreatePlaylist(c *gin.Context) {
-        if auth.Access.Token == "" {
-                c.IndentedJSON(http.StatusOK, gin.H{"error": "No access token"})
-                return
-        }
+	if auth.Access.Token == "" {
+		c.JSON(http.StatusOK, gin.H{"error": "No access token"})
+		return
+	}
 
-        if auth.User.ID == "" {
-                c.IndentedJSON(http.StatusOK, gin.H{"error": "No userID"})
-        }
+	if auth.User.ID == "" {
+		c.JSON(http.StatusOK, gin.H{"error": "No userID"})
+	}
 
-        endpoint := fmt.Sprintf("%susers/%s/playlists", baseURL, auth.User.ID)
-	
+	endpoint := fmt.Sprintf("%susers/%s/playlists", baseURL, auth.User.ID)
+
 	jsonData, _ := c.GetRawData()
 
-        client := &http.Client{}
-	req, _:= http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(jsonData))
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(jsonData))
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer " + auth.Access.Token)
+	req.Header.Add("Authorization", "Bearer "+auth.Access.Token)
 
 	resp, _ := client.Do(req)
 
 	if resp.StatusCode != http.StatusCreated {
-		c.IndentedJSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Spotify API returned status code: %d", resp.StatusCode)})
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Spotify API returned status code: %d", resp.StatusCode)})
 		return
 	}
-	
+
 	body, _ := io.ReadAll(resp.Body)
 	json.Unmarshal(body, &playlist)
 
-	c.IndentedJSON(http.StatusOK, gin.H{"success": playlist.ID})
+	c.JSON(http.StatusOK, gin.H{"success": playlist.ID})
 
 }
 
@@ -146,14 +146,12 @@ func CreatePlaylist(c *gin.Context) {
 
 func AddTracks(c *gin.Context) {
 	if auth.Access.Token == "" {
-		c.IndentedJSON(http.StatusOK, gin.H{"error": "No access token"})
+		c.JSON(http.StatusOK, gin.H{"error": "No access token"})
 		return
 	}
-	
-
 
 	if playlist.ID == "" {
-		c.IndentedJSON(http.StatusOK, gin.H{"error": "No Playlist ID"})
+		c.JSON(http.StatusOK, gin.H{"error": "No Playlist ID"})
 		return
 	}
 
@@ -164,14 +162,14 @@ func AddTracks(c *gin.Context) {
 	client := &http.Client{}
 	req, _ := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(jsonData))
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer " + auth.Access.Token)
+	req.Header.Add("Authorization", "Bearer "+auth.Access.Token)
 
 	resp, _ := client.Do(req)
 
 	if resp.StatusCode != http.StatusCreated {
-		c.IndentedJSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Spotify API returned status code: %d", resp.StatusCode)})
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Spotify API returned status code: %d", resp.StatusCode)})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"success": "Tracks successfully added to playlist: " + playlist.Name})
+	c.JSON(http.StatusOK, gin.H{"success": "Tracks successfully added to playlist: " + playlist.Name})
 }
