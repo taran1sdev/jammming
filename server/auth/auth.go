@@ -55,6 +55,7 @@ func RedirectToAuthURL(c *gin.Context) {
 	"user-read-email",
 	"playlist-modify-public",
 	"user-read-private",
+	"playlist-modify-private",
 }
 
 
@@ -124,7 +125,6 @@ func HandleAuthCallback(c *gin.Context) {
 		if err = getUserInfo(); err != nil {
 			log.Fatal("Error getting user info")
 		}
-		fmt.Println(User)
 		c.Redirect(http.StatusFound, frontend)
 	} else {
 		log.Fatalf("Request returned Status %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
