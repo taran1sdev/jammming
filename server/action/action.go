@@ -107,6 +107,8 @@ type playlistInfo struct {
 	Name string `json:"name"`
 }
 
+var playlist playlistInfo
+
 func CreatePlaylist(c *gin.Context) {
         if auth.Access.Token == "" {
                 c.IndentedJSON(http.StatusOK, gin.H{"error": "No access token"})
@@ -133,14 +135,43 @@ func CreatePlaylist(c *gin.Context) {
 		return
 	}
 	
-	var playlist playlistInfo
-
 	body, _ := io.ReadAll(resp.Body)
 	json.Unmarshal(body, &playlist)
 
-	c.IndentedJSON(http.StatusOK, gin.H{"success": fmt.Sprintf("Spotify created the playlist %s with the id %s", playlist.Name, playlist.ID)})
+	c.IndentedJSON(http.StatusOK, gin.H{"success": playlist.ID})
 
 }
 
 // Add Tracks to Playlist
 
+func AddTracks(c *gin.Context) {
+	if auth.Access.Token == "" {
+		c.IndentedJSON(http.StatusOK, gin.H{"error": "No access token"})
+		return
+	}
+	
+
+
+	if playlist.ID == "" {
+		c.IndentedJSON(http.StatusOK, gin.H{"error": "No Playlist ID"})
+		return
+	}
+
+	endpoint := fmt.Sprintf("%splaylists/%s/tracks", baseURL, playlist.ID)
+
+	jsonData, _ := c.GetRawData()
+
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(jsonData))
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer " + auth.Access.Token)
+
+	resp, _ := client.Do(req)
+
+	if resp.StatusCode != http.StatusCreated {
+		c.IndentedJSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Spotify API returned status code: %d", resp.StatusCode)})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"success": "Tracks successfully added to playlist: " + playlist.Name})
+}

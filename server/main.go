@@ -24,7 +24,7 @@ func main() {
 	router.GET("/search", action.SearchSpotify)
 
 	router.POST("/createPlaylist", action.CreatePlaylist)
-
+	router.POST("/addTracks", action.AddTracks)
 	router.Run("localhost:5000")
 }
 
