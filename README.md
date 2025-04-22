@@ -7,10 +7,10 @@ I created a backend API with Go to handle requests to the Spotify API instead of
 Application Features:
 - Authenticate with spotify api
 - Search for tracks
+- Play/Pause tracks that appear in search
 - Build a playlist
 - Name the playlist
 - Upload the Playlist to spotify profile
 
 TODO:
-- Allow users to play tracks with spotify's Web Playback SDK
 - Make design more responsive 
