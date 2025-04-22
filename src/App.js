@@ -7,6 +7,8 @@ import getAuthenticated from './apiCalls/getAuthenticated';
 import SearchContainer from './containers/SearchContainer'
 import PlaylistContainer from './containers/PlaylistContainer'
 
+import WebPlayback from './components/WebPlayback';
+
 function App() {
     const [selectedSongs, setSelectedSongs] = useState([]);
     const [authenticated, setAuthenticated] = useState(false);
@@ -22,12 +24,17 @@ function App() {
     	<SearchContainer
 		selectedSongs={selectedSongs}
 		setSelectedSongs={setSelectedSongs} 
-		authenticated={authenticated}/>
+		authenticated={authenticated} />
 
 	<PlaylistContainer
 		selectedSongs={selectedSongs}
 		setSelectedSongs={setSelectedSongs} />
-    </div>
+    
+	{
+		authenticated ? <WebPlayback/> 
+		: <></>
+	}
+	</div>
   );
 }
 

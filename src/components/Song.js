@@ -1,25 +1,26 @@
 import React from 'react';
 
 
-export function Song({track, handleClick, search}) {   
+export function Song({track, handleClick, search, trackPlaying}) {   
     if(track){
         return (
-        <div className='Song' onClick={handleClick} id={track.id}>
-            <img src={track.img} id={track.id} alt='Album art'/>
-            <div className='Info' id={track.id}>
-                <h4 id={track.id}>{
+        <div className='Song' onClick={handleClick} id={track.uri}>
+            <img src={track.img} id={track.uri} alt='Album art'/>
+            <div className='Info' id={track.uri}>
+                <h4 id={track.uri}>{
                 track.name.length > 25 ? track.name.slice(0, 25) : track.name
                 }</h4>
-                <p id={track.id}>{track.artist}</p>
+                <p id={track.uri}>{track.artist}</p>
             </div>
             {
-              /*  !search ? <div className='Play'>
+               !search ? <div className='Play'>
                     {
-                        trackPlaying === track.id ? <img src={require('../resources/pause.png')} name='pause' id={track.id} />
-                        : <img src={require('../resources/play.png')} name='play' id={track.id} />
+                        trackPlaying === track.uri ? <img src={require('../resources/pause.png')} name='pause' 
+                        id={track.uri} alt='pause button' />
+                        : <img src={require('../resources/play.png')} name='play' id={track.uri} alt='play button' />
                     }  
                 </div> 
-                : <></> */
+                : <></> 
             }
         </div>
     )}

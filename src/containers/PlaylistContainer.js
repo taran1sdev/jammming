@@ -14,9 +14,9 @@ function PlaylistContainer({selectedSongs, setSelectedSongs}) {
     
     const handleClick = (e) => {
         const trackToRemove = selectedSongs.find((track) => {
-            return track.id === e.target.id;
+            return track.uri === e.target.id;
         })
-        setSelectedSongs(selectedSongs.filter((song) => song.id !== trackToRemove.id));
+        setSelectedSongs(selectedSongs.filter((song) => song.uri !== trackToRemove.uri));
     };
 
     const handleUpload = (e) => {

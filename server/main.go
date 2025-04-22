@@ -5,6 +5,7 @@ import (
 
 	"jammming/action"
 	"jammming/auth"
+	"jammming/playback"
 
 	"net/http"
 )
@@ -26,6 +27,12 @@ func main() {
 
 	router.POST("/createPlaylist", action.CreatePlaylist)
 	router.POST("/addTracks", action.AddTracks)
+
+	router.POST("/transferPlayback", playback.TransferPlayback)
+	router.POST("/playTrack", playback.PlayTrack)
+
+	router.GET("/pause", playback.PausePlayback)
+
 	router.Run("localhost:5000")
 }
 

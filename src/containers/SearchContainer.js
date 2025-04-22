@@ -5,7 +5,8 @@ import SearchBar from '../components/SearchBar';
 import {Song} from '../components/Song'; 
 
 import searchSpotify from '../apiCalls/searchSpotify';
-
+import playTrack from '../apiCalls/playTrack';
+import pausePlayback from '../apiCalls/pausePlayback';
 
 function SearchContainer({selectedSongs, setSelectedSongs, authenticated}) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -16,7 +17,6 @@ function SearchContainer({selectedSongs, setSelectedSongs, authenticated}) {
             searchSpotify(searchTerm).then((results) => {
                 const tracks = results.map((track) => {
                     return {
-                        id: track.ID,
                         uri: track.URI,
                         name: track.Name,
                         artist: track.Artist,
@@ -31,18 +31,37 @@ function SearchContainer({selectedSongs, setSelectedSongs, authenticated}) {
 
     const handleTextInput = (e) => setSearchTerm(e.target.value);
 
-    //const [trackPlaying, setTrackPlaying] = useState(null);
-    //const [audio, setAudio] = useState(null);
+    const [trackPlaying, setTrackPlaying] = useState('');
 
     const handleClick = (e) => {
-        const trackToAdd = searchResults.find((track) => {
-            return track.id === e.target.id; 
-        })
-
-        if(!selectedSongs.includes(trackToAdd)){
-            setSelectedSongs([...selectedSongs, trackToAdd]);
-        }
         
+        if(e.target.name === "play"){
+            playTrack(e.target.id).then((result) => {
+                if (result) {
+                    setTrackPlaying(e.target.id);
+                    console.log("Playback Successful");
+                } else {
+                    console.log("An error occured during playback");
+                }
+            });
+        } else if (e.target.name === "pause") {
+            pausePlayback().then((result) => {
+                if (result) {
+                    setTrackPlaying('');
+                    console.log("Playback paused");
+                } else {
+                    console.log("An error occured pausing playback");
+                }
+            })
+        } else {
+            const trackToAdd = searchResults.find((track) => {
+                return track.uri === e.target.id; 
+            })
+    
+            if(!selectedSongs.includes(trackToAdd)){
+                setSelectedSongs([...selectedSongs, trackToAdd]);
+            }
+        }
     }
 
     return (
@@ -58,6 +77,7 @@ function SearchContainer({selectedSongs, setSelectedSongs, authenticated}) {
                 searchResults && searchTerm ? 
                     searchResults.map((track) => <Song track={track}
                                                     handleClick={handleClick}
+                                                    trackPlaying={trackPlaying}
                                                     /> )  
                 : <></>
             }             
